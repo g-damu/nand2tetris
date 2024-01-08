@@ -1,0 +1,14 @@
+/**
+ * 4-bit Not:
+ * for i=0..3: out[i] = not in[i]
+ */
+
+CHIP Not4 {
+    IN in[4];
+    OUT out[4];
+
+    PARTS:
+    // Put your code here:
+	Not2(in=in[0..1],out=out[0..1]);
+	Not2(in=in[2..3],out=out[2..3]);
+}

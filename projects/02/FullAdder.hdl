@@ -1,0 +1,42 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/02/FullAdder.hdl
+
+/**
+ * Computes the sum of three bits.
+ */
+
+CHIP FullAdder {
+    IN a, b, c;  // 1-bit inputs
+    OUT sum,     // Right bit of a + b + c
+        carry;   // Left bit of a + b + c
+
+    PARTS:
+    // Put you code here:
+/*Xor(a=a,b=b,out=axorb);
+Xor(a=axorb,b=c,out=sum);*/
+/*Not(in=a,out=nota);
+Not(in=b,out=notb);
+Not(in=c,out=notc);
+Xor(a=nota,b=notb,out=notaxornotb);
+Xor(a=notaxornotb,b=notc,out=notaxornotbxornotc);*/
+And(a=a,b=b,out=aandb);
+/*And(a=aandb,b=c,out=aandbandc);
+Or(a=notaxornotbxornotc,b=aandbandc,out=carry);*/
+/*And(a=axorb,b=c,out=candaxorb);
+Or(a=aandb,b=candaxorb,out=carry);*/
+
+/*HalfAdder(a=b,b=c,sum=sumbc,carry=carrybc);
+Not(in=b,out=notb);
+Not(in=c,out=notc);
+HalfAdder(a=notb,b=notc,sum=sumnotbnotc,carry=carrynotbnotc);
+Not(in=sumnotbnotc,out=notsumnotbnotc);
+Not(in=carrynotbnotc,out=notcarrynotbnotc);
+Mux(a=sumbc,b=notsumnotbnotc,sel=a,out=sum);
+Mux(a=carrybc,b=notcarrynotbnotc,sel=a,out=carry);*/
+
+HalfAdder(a=a,b=b,sum=sumab,carry=carryab);
+HalfAdder(a=sumab,b=c,sum=sum,carry=carryabc);
+Or(a=carryab,b=carryabc,out=carry);
+}

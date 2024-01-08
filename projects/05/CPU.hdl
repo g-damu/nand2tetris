@@ -1,0 +1,152 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/05/CPU.hdl
+
+/**
+ * The Hack CPU (Central Processing unit), consisting of an ALU,
+ * two registers named A and D, and a program counter named PC.
+ * The CPU is designed to fetch and execute instructions written in 
+ * the Hack machine language. In particular, functions as follows:
+ * Executes the inputted instruction according to the Hack machine 
+ * language specification. The D and A in the language specification
+ * refer to CPU-resident registers, while M refers to the external
+ * memory location addressed by A, i.e. to Memory[A]. The inM input 
+ * holds the value of this location. If the current instruction needs 
+ * to write a value to M, the value is placed in outM, the address 
+ * of the target location is placed in the addressM output, and the 
+ * writeM control bit is asserted. (When writeM==0, any value may 
+ * appear in outM). The outM and writeM outputs are combinational: 
+ * they are affected instantaneously by the execution of the current 
+ * instruction. The addressM and pc outputs are clocked: although they 
+ * are affected by the execution of the current instruction, they commit 
+ * to their new values only in the next time step. If reset==1 then the 
+ * CPU jumps to address 0 (i.e. pc is set to 0 in next time step) rather 
+ * than to the address resulting from executing the current instruction. 
+ */
+
+CHIP CPU {
+
+    IN  inM[16],         // M value input  (M = contents of RAM[A])
+        instruction[16], // Instruction for execution
+        reset;           // Signals whether to re-start the current
+                         // program (reset==1) or continue executing
+                         // the current program (reset==0).
+
+    OUT outM[16],        // M value output
+        writeM,          // Write to M? 
+        addressM[15],    // Address in data memory (of M)
+        pc[15];          // address of next instruction
+
+    PARTS:
+    // Put your code here:
+	
+//For control bits of ALU, ensuring instrn is C 	
+	
+	And(a=instruction[15],b=instruction[11],out=zxand);//Ensuring instrn is 
+	And(a=instruction[15],b=instruction[10],out=nxand);//c by anding 
+	And(a=instruction[15],b=instruction[9],out=zyand);//anding
+	And(a=instruction[15],b=instruction[8],out=nyand);//with
+	And(a=instruction[15],b=instruction[7],out=fand);//ins0
+	And(a=instruction[15],b=instruction[6],out=noand);
+
+// For routing ALU out, Ensuring instrn is C	
+	And(a=instruction[15],b=instruction[5],out=aregand);// Ensuring instrn
+	And(a=instruction[15],b=instruction[4],out=dregand);// is c and
+	And(a=instruction[15],b=instruction[3],out=writeM);// dest is among a, d and m regs This is for load bits of a, d and writeM
+
+//If instrn involves mem input in compute, ensuring instrn is C and enabling mem input
+	And(a=instruction[15],b=instruction[12],out=inMsel);
+
+
+// A Reg	
+	Not(in=instruction[15],out=notins0);
+		
+	Or(a=notins0,b=aregand,out=aregload);// A reg is loaded only when instrn is a or dest in c instrn is A	
+	
+	Mux16(a=instruction,b=aluout,sel=instruction[15],out=insmuxaluout);// A Register Mux. If instrn is a, push the val to a reg		
+	ARegister(in=insmuxaluout,load=aregload,out=aregout,out[0..14]=addressM);// A register
+
+
+// D Reg	
+	Mux16(a=aregout,b=inM,sel=inMsel,out=inMmuxareg);
+	
+	DRegister(in=aluout,load=dregand,out=dregout);// D register
+	
+//ALU	
+	ALU(x=dregout,y=inMmuxareg,zx=zxand,nx=nxand,zy=zyand,ny=nyand,f=fand,no=noand,out=aluout,out=outM,zr=aluoutzr,ng=aluoutng);
+
+// PC load
+	
+	//Ensuring instrn is C
+	
+	And(a=instruction[15],b=instruction[1],out=candj2);
+	
+	And(a=instruction[15],b=instruction[2],out=candj1);
+
+	And(a=instruction[15],b=instruction[0],out=candj3);
+	
+	//Jumps on cndns
+	
+/*	Not(in=aluoutng,out=notng);
+	Not(in=aluoutzr,out=notzr);
+	
+	And(a=notng,b=candj3,out=posjmp);//Jmp if alu outputs +ve n instrn says
+	
+	And(a=aluoutzr,b=candj2,out=zrjmp);      
+
+	And(a=aluoutng,b=candj1,out=ngjmp);
+	
+	//Uncndnl jmp
+	
+	And(a=candj2,b=candj1,out=j12);
+	And(a=candj3,b=j12,out=uncdnljmp);
+	
+	Or(a=posjmp,b=ngjmp,out=posorngjmp);
+	And(a=posorngjmp,b=notzr,out=notzrandposorngjmp);
+	
+	Or(a=zrjmp,b=uncdnljmp,out=zroruncjmp);
+	Or(a=zroruncjmp,b=notzrandposorngjmp,out=jmp);*/
+	
+	And(a=candj2,b=candj1,out=j12);
+	And(a=candj3,b=j12,out=uncdnljmp);
+	
+	Mux(a=candj3,b=candj1,sel=aluoutng,out=posorngjmp);
+	
+	Mux(a=posorngjmp,b=candj2,sel=aluoutzr,out=cndjmp);
+	
+	Or(a=uncdnljmp,b=cndjmp,out=jmp);
+	
+	Not(in=jmp,out=notjmp);
+	
+	PC(in=aregout,reset=reset,load=jmp,inc=notjmp,out[0..14]=pc);
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+}
